@@ -1,12 +1,12 @@
-Source: netrunner-pinebook-desktop-settings
+Source: c1-netrunner-zeronet-desktop-settings
 Section: unknown
 Priority: optional
-Maintainer: Rohan Garg <rohan@kde.org>
+Maintainer: Leszek Lesner <leszek@zevenos.com>
 Build-Depends: debhelper (>= 9)
 Standards-Version: 3.9.8
-Homepage: https://github.com/netrunner-pinebook/netrunner-pinebook-desktop-settings
+Homepage: https://github.com/netrunner-zeronet/c1-netrunner-zeronet-desktop-settings
 
-Package: netrunner-pinebook-desktop-settings
+Package: c1-netrunner-zeronet-desktop-settings
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: netrunner desktop specific settings
