@@ -4,7 +4,7 @@ Description=Decentralized websites using Bitcoin crypto and the BitTorrent netwo
 [Service]
 User=zeronet
 Group=zeronet
-WorkingDirectory=/opt/zeronet
+WorkingDirectory=/opt/zeronet/ZeroNet-master
 ExecStart=/usr/bin/env python2 zeronet.py --tor always --ui_ip "*"
 Restart=on-failure
 
