@@ -1,2 +1,8 @@
 [Compositing]
 GLPreferBufferSwap=n
+
+[org.kde.kdecoration2]
+CloseOnDoubleClickOnMenu=true
+library=org.kde.breeze
+ButtonsOnLeft=MS
+ButtonsOnRight=IAX
