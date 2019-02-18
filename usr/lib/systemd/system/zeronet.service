@@ -5,7 +5,7 @@ Description=Zeronet - Decentralized websites using Bitcoin crypto and the BitTor
 User=zeronet
 Group=zeronet
 WorkingDirectory=/opt/zeronet/ZeroNet-master
-ExecStart=/usr/bin/env python2 zeronet.py --tor always --ui_ip "*"
+ExecStart=/usr/bin/env python2 zeronet.py --tor always --ui_ip "*" --ui_host "$(hostname)"
 Restart=on-failure
 
 [Install]
