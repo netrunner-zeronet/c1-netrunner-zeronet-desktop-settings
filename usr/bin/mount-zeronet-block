@@ -1,0 +1,69 @@
+#!/bin/env python3
+
+import dbus
+import sys
+import os
+import shutil
+import subprocess
+import socket
+
+search_uuid = ''
+try:
+    f = open('/opt/zeronet/current.conf', 'r')
+    search_uuid = f.readline()
+except:
+    pass
+
+if not search_uuid:
+    sys.exit(0)
+
+bus = dbus.SystemBus()
+obj = bus.get_object('org.freedesktop.UDisks2', '/org/freedesktop/UDisks2/Manager')
+iface = dbus.Interface(obj, 'org.freedesktop.UDisks2.Manager')
+
+def mount_device(block_uuid):
+    devices = iface.GetBlockDevices({'auth.no_user_interaction': True})
+
+    for device in devices:
+        device_obj = bus.get_object('org.freedesktop.UDisks2', device)
+
+        device_iface = dbus.Interface(device_obj, 'org.freedesktop.DBus.Properties')
+        device_props = device_iface.GetAll('org.freedesktop.UDisks2.Block')
+        device_uuid = device_props['IdUUID']
+
+        if device_uuid == block_uuid:
+            mount_point = ""
+            tmp = device_iface.Get('org.freedesktop.UDisks2.Filesystem', 'MountPoints')
+            if len(tmp) > 0:
+                mount_point = ''.join([chr(v) for v in tmp[0]]).rstrip('\0')
+
+            if mount_point:
+                return mount_point
+
+            fs_iface = dbus.Interface(device_obj, 'org.freedesktop.UDisks2.Filesystem')
+            tmp = fs_iface.Mount({})
+            mount_point = ''.join([chr(v) for v in tmp]).rstrip('\0')
+            return mount_point
+
+    raise NameError("No such block device %s" % block_uuid)
+
+if __name__ == "__main__":
+    mount_point = ""
+    try:
+        mount_point = mount_device(search_uuid)
+    except Exception as err:
+        print ("Could not mount block: %s " % search_uuid)
+
+    if mount_point:
+        zn_path = mount_point + "/ZeroNet-master"
+        try:
+            print (zn_path)
+            for root, dirs, files in os.walk(zn_path):
+                for d in dirs:
+                    dirname = os.path.join(root, d)
+                    shutil.chown(dirname, "zeronet", "zeronet")
+                for f in files:
+                    filename = os.path.join(root, f)
+                    shutil.chown(filename, "zeronet", "zeronet")
+        except:
+            print ("Could not set permissions on %s " % zn_path)

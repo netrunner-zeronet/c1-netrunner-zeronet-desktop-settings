@@ -4,9 +4,10 @@ Description=Zeronet - Decentralized websites using Bitcoin crypto and the BitTor
 [Service]
 User=zeronet
 Group=zeronet
-WorkingDirectory=/opt/zeronet/ZeroNet-master
-ExecStart=/bin/bash -c '/usr/bin/env python2 zeronet.py --tor always --ui_ip "*" --ui_host "$(hostname)"'
+ExecStartPre=/usr/bin/mount-zeronet-block
+ExecStart=/usr/bin/run-zeronet
+PermissionsStartOnly=true
 Restart=on-failure
 
 [Install]
-WantedBy=default.target 
+WantedBy=default.target

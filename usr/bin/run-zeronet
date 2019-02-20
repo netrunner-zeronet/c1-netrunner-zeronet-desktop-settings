@@ -1,0 +1,56 @@
+#!/bin/env python3
+
+import dbus
+import sys
+import os
+import subprocess
+import socket
+
+search_uuid = ''
+try:
+    f = open('/opt/zeronet/current.conf', 'r')
+    search_uuid = f.readline()
+except:
+    pass
+
+bus = dbus.SystemBus()
+obj = bus.get_object('org.freedesktop.UDisks2', '/org/freedesktop/UDisks2/Manager')
+iface = dbus.Interface(obj, 'org.freedesktop.UDisks2.Manager')
+
+def mount_device(block_uuid):
+    devices = iface.GetBlockDevices({'auth.no_user_interaction': True})
+    
+    for device in devices:
+        device_obj = bus.get_object('org.freedesktop.UDisks2', device)
+    
+        device_iface = dbus.Interface(device_obj, 'org.freedesktop.DBus.Properties')
+        device_props = device_iface.GetAll('org.freedesktop.UDisks2.Block')
+        device_uuid = device_props['IdUUID']
+    
+        if device_uuid == block_uuid:
+            tmp = device_iface.Get('org.freedesktop.UDisks2.Filesystem', 'MountPoints')
+            mount_point = ""
+            if len(tmp) > 0:
+                mount_point = ''.join([chr(v) for v in tmp[0]]).rstrip('\0')
+
+            if mount_point:
+                return mount_point
+
+    raise NameError("No mounted block device %s" % block_uuid)
+
+if __name__ == "__main__":
+    try:
+        if search_uuid:
+            mount_path = mount_device(search_uuid)
+            zn_path = mount_path + "/ZeroNet-master"
+        else:
+            zn_path = "/opt/zeronet/ZeroNet-master"
+        print ("starting %s" % zn_path)
+        if os.path.isdir(zn_path):
+            rc = subprocess.run(["./zeronet.py", "--tor", "always", "--ui_ip", "*", "--ui_host", socket.gethostname()] , cwd = zn_path)
+            sys.exit(rc.returncode)
+        else:
+            raise RuntimeError("No zeronet instance at %s" % zn_path)
+    except Exception as err:
+        print ("Could not start zeronet: ", err)
+        sys.exit(-1)
