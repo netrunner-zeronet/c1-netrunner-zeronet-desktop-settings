@@ -36,15 +36,14 @@ def mount_device(block_uuid):
             if mount_point:
                 return mount_point
 
-    raise NameError("No mounted block device %s" % block_uuid)
-
 if __name__ == "__main__":
     try:
+        zn_path = "/opt/zeronet/ZeroNet-master"
         if search_uuid:
             mount_path = mount_device(search_uuid)
-            zn_path = mount_path + "/ZeroNet-master"
-        else:
-            zn_path = "/opt/zeronet/ZeroNet-master"
+            if mount_path:
+                zn_path = mount_path + "/ZeroNet-master"
+
         print ("starting %s" % zn_path)
         if os.path.isdir(zn_path):
             rc = subprocess.run(["./zeronet.py", "--tor", "always", "--ui_ip", "*", "--ui_host", socket.gethostname()] , cwd = zn_path)
