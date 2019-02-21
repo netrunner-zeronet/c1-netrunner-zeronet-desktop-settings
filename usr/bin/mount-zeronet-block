@@ -62,8 +62,10 @@ if __name__ == "__main__":
                 for d in dirs:
                     dirname = os.path.join(root, d)
                     shutil.chown(dirname, "zeronet", "zeronet")
+                    os.chmod(dirname, 511) # 777
                 for f in files:
                     filename = os.path.join(root, f)
                     shutil.chown(filename, "zeronet", "zeronet")
+                    os.chmod(filename, 511) # 777
         except:
             print ("Could not set permissions on %s " % zn_path)
