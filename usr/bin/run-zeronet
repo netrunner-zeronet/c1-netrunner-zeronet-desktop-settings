@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
         print ("starting %s" % zn_path)
         if os.path.isdir(zn_path):
-            rc = subprocess.run(["./zeronet.py", "--tor", "always", "--ui_ip", "*", "--ui_host", socket.gethostname()] , cwd = zn_path)
+            rc = subprocess.run(["python", "./zeronet.py", "--tor", "always", "--ui_ip", "*", "--ui_host", socket.gethostname()] , cwd = zn_path)
             sys.exit(rc.returncode)
         else:
             raise RuntimeError("No zeronet instance at %s" % zn_path)
