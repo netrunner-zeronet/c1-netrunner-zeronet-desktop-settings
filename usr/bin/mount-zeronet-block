@@ -68,5 +68,9 @@ if __name__ == "__main__":
                     #filename = os.path.join(root, f)
                     #shutil.chown(filename, "zeronet", "zeronet")
                     #os.chmod(filename, 511) # 777
+            # Explicitly chown the keys
+            for f in ["/data/cert-rsa.pem", "/data/key-rsa.pem"]:
+                shutil.chown(zn_path + f, "zeronet", "zeronet")
+                os.chmod(zn_path + f, 511) # 777
         except:
             print ("Could not set permissions on %s " % zn_path)
