@@ -48,8 +48,7 @@ def mountpoint(block_uuid, mount): # TODO avoid boolean trap
 
             if mount:
                 fs_iface = dbus.Interface(device_obj, 'org.freedesktop.UDisks2.Filesystem')
-                tmp = fs_iface.Mount({})
-                mount_point = ''.join([chr(v) for v in tmp]).rstrip('\0')
+                mount_point = fs_iface.Mount({})
 
             return mount_point
 
