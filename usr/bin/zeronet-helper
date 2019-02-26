@@ -1,0 +1,111 @@
+#!/bin/env python3
+
+import dbus
+import sys
+import os
+import shutil
+import subprocess
+import signal
+import socket
+
+zeronet_proc = None
+
+def signal_handler(signum, frame):
+    if not zeronet_proc:
+        return
+    zeronet_proc.terminate()
+
+def current_zeronet_uuid():
+    search_uuid = ''
+    try:
+        f = open('/opt/zeronet/current.conf', 'r')
+        search_uuid = f.readline()
+    except:
+        pass
+    return search_uuid
+
+def mountpoint(block_uuid, mount): # TODO avoid boolean trap
+    bus = dbus.SystemBus()
+    obj = bus.get_object('org.freedesktop.UDisks2', '/org/freedesktop/UDisks2/Manager')
+    iface = dbus.Interface(obj, 'org.freedesktop.UDisks2.Manager')
+    devices = iface.GetBlockDevices({'auth.no_user_interaction': True})
+
+    for device in devices:
+        device_obj = bus.get_object('org.freedesktop.UDisks2', device)
+
+        device_iface = dbus.Interface(device_obj, 'org.freedesktop.DBus.Properties')
+        device_props = device_iface.GetAll('org.freedesktop.UDisks2.Block')
+        device_uuid = device_props['IdUUID']
+
+        if device_uuid == block_uuid:
+            mount_point = ""
+            tmp = device_iface.Get('org.freedesktop.UDisks2.Filesystem', 'MountPoints')
+            if len(tmp) > 0:
+                mount_point = ''.join([chr(v) for v in tmp[0]]).rstrip('\0')
+
+            if mount_point:
+                return mount_point
+
+            if mount:
+                fs_iface = dbus.Interface(device_obj, 'org.freedesktop.UDisks2.Filesystem')
+                tmp = fs_iface.Mount({})
+                mount_point = ''.join([chr(v) for v in tmp]).rstrip('\0')
+
+            return mount_point
+
+    raise NameError("No such block device %s" % block_uuid)
+
+def chmod_zeronet(path):
+    try:
+        print ("Chmod ZeroNet in", path)
+        for root, dirs, files in os.walk(path):
+            for d in dirs:
+                dirname = os.path.join(root, d)
+                shutil.chown(dirname, "zeronet", "zeronet")
+                os.chmod(dirname, 511) # 777
+            # It doesn't seem neccessary to chmod the files, too
+            #for f in files:
+                #filename = os.path.join(root, f)
+                #shutil.chown(filename, "zeronet", "zeronet")
+                #os.chmod(filename, 511) # 777
+        # Explicitly chown the keys
+        for f in ["/data/cert-rsa.pem", "/data/key-rsa.pem"]:
+            shutil.chown(path + f, "zeronet", "zeronet")
+            os.chmod(path + f, 511) # 777
+    except:
+        print ("Could not set permissions on %s " % path)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Invalid usage")
+        sys.exit(1)
+
+    action = sys.argv[1]
+    print("ZeroNet helper action:", action)
+
+    try:
+        zn_path = "/opt/zeronet/ZeroNet-master"
+        uuid = current_zeronet_uuid()
+        if uuid:
+            mount_path = mountpoint(uuid, mount = action == "mount")
+            if mount_path:
+                zn_path = mount_path + "/ZeroNet-master"
+
+                if action == "mount" or action == "chmod":
+                    chmod_zeronet(zn_path)
+
+        if action == "start":
+            print ("starting %s" % zn_path)
+            if os.path.isdir(zn_path):
+                signal.signal(signal.SIGTERM, signal_handler)
+                zeronet_proc = subprocess.Popen(["python", "./zeronet.py", "--tor", "always", "--ui_ip", "*", "--ui_host", socket.gethostname()] , cwd = zn_path, close_fds = True)
+                zeronet_proc.wait()
+                print("ZeroNet exited with", zeronet_proc.returncode)
+                sys.exit(zeronet_proc.returncode)
+            else:
+                raise RuntimeError("No zeronet instance at %s" % zn_path)
+
+    except Exception as err:
+        print ("Could not", action, "zeronet:", err)
+        sys.exit(-1)
