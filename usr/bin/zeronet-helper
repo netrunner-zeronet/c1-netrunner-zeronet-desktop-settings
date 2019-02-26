@@ -99,7 +99,7 @@ if __name__ == "__main__":
             print ("starting %s" % zn_path)
             if os.path.isdir(zn_path):
                 signal.signal(signal.SIGTERM, signal_handler)
-                zeronet_proc = subprocess.Popen(["python", "./zeronet.py", "--tor", "always", "--ui_ip", "*", "--ui_host", socket.gethostname()] , cwd = zn_path, close_fds = True)
+                zeronet_proc = subprocess.Popen(["python", "./zeronet.py", "--log_dir", "/tmp/", "--log_level", "ERROR", "--tor", "always", "--ui_ip", "*", "--ui_host", socket.gethostname()] , cwd = zn_path, close_fds = True)
                 zeronet_proc.wait()
                 print("ZeroNet exited with", zeronet_proc.returncode)
                 sys.exit(zeronet_proc.returncode)
