@@ -4,9 +4,9 @@ Description=Zeronet - Decentralized websites using Bitcoin crypto and the BitTor
 [Service]
 User=zeronet
 Group=zeronet
-ExecStartPre=/usr/bin/mount-zeronet-block
-ExecStart=/usr/bin/run-zeronet
-PermissionsStartOnly=true
+ExecStartPre=+/usr/bin/zeronet-helper mount
+ExecStart=/usr/bin/zeronet-helper start
+ExecStopPost=+/usr/bin/zeronet-helper chmod
 Restart=on-failure
 
 [Install]
